@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A7med_Ashraf Login</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: url('images/login-bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-container {
+      background: rgba(0,0,0,0.3);
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      color: #fff;
+      width: 300px;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      width: 95%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button#loginBtn {
+      background: #e91e63;
+      color: #fff;
+    }
+    button#loginBtn:hover {
+      background: #ff3e7f;
+    }
+    button#supportBtn {
+      background: #00bfff;
+      color: #fff;
+      margin-top: 10px;
+    }
+    button#supportBtn:hover {
+      background: #33ccff;
+    }
+    #error-message {
+      color: #ff4d4d;
+      font-size: 14px;
+      margin-top: 5px;
+      min-height: 18px;
+    }
+    /* مودال الدعم الفني */
+    #supportModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    #supportModalContent {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 300px;
+      width: 80%;
+    }
+    #supportModalContent h3 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    #supportModalContent p {
+      color: #555;
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #supportModalContent button {
+      background: #e91e63;
+      color: #fff;
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .copy-btn {
+      background: #00bfff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .copy-btn:hover {
+      background: #33ccff;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>صفحة ادارة الديون للمواظفين والعملاء</h2>
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="storeName" placeholder="username">
+    <input type="password" id="password" placeholder="password">
+    <p id="error-message"></p>
+    <button id="loginBtn" onclick="login()">تسجيل الدخول</button>
+    <button id="supportBtn">التواصل مع الدعم الفني</button>
+  </div>
+
+  <!-- مودال الدعم الفني -->
+  <div id="supportModal">
+    <div id="supportModalContent">
+      <h3>whatsapp</h3>
+      <p>
+        📞 <span id="supportPhone">01019728653</span>
+        <button class="copy-btn" onclick="copyText('supportPhone')">نسخ</button>
+      </p>
+      <button onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7V0kGz3p11sjF-FMSLW4kJ5WuZzNtLX0",
+      authDomain: "cafe-pc-8a386.firebaseapp.com",
+      databaseURL: "https://cafe-pc-8a386-default-rtdb.firebaseio.com",
+      projectId: "cafe-pc-8a386",
+      storageBucket: "cafe-pc-8a386.firebasestorage.app",
+      messagingSenderId: "150129569328",
+      appId: "1:150129569328:web:34c4980a7b9b3a6d1947f5",
+      measurementId: "G-5HJ1Z58WXF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function login() {
+      const storeName = document.getElementById("storeName").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("error-message");
+
+      if (!storeName || !password) {
+        errorMsg.innerText = "يرجى إدخال جميع البيانات";
+        return;
+      }
+
+      const adminUser = "admin";
+      const adminPass = "a7med1660";
+
+      if (storeName === adminUser && password === adminPass) {
+        window.location.href = "admin.html";
+        return;
+      }
+
+      db.ref(`stores/${storeName}/info`).once('value')
+        .then(snapshot => {
+          if (!snapshot.exists()) {
+            errorMsg.innerText = "المتجر غير موجود";
+            return;
+          }
+
+          const storeData = snapshot.val();
+
+          if (storeData.password !== password) {
+            errorMsg.innerText = "كلمة المرور غير صحيحة";
+            return;
+          }
+
+          // ✅ تحقق من حالة المتجر
+          if (storeData.status && storeData.status === "متوقف") {
+            errorMsg.innerText = "⚠️ تم إيقاف هذا المتجر، برجاء التواصل مع الإدارة";
+            return;
+          }
+
+          localStorage.setItem('storeName', storeName);
+          window.location.href = "dashboard.html";
+        })
+        .catch(err => {
+          console.error(err);
+          errorMsg.innerText = "حدث خطأ أثناء تسجيل الدخول";
+        });
+    }
+
+    // مودال الدعم الفني
+    const supportBtn = document.getElementById('supportBtn');
+    const supportModal = document.getElementById('supportModal');
+
+    supportBtn.onclick = () => {
+      supportModal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      supportModal.style.display = 'none';
+    }
+
+    // دالة النسخ
+    function copyText(id) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('تم نسخ النص: ' + text);
+      });
+    }
+  </script>
+</body>
+</html>
